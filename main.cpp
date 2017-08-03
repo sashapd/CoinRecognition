@@ -15,7 +15,7 @@ std::vector<cv::Vec3f> getCoinLocations(const cv::Mat& image) {
 
     std::vector<cv::Vec3f> circles;
 
-    cv::HoughCircles( grayImage, circles, cv::HOUGH_GRADIENT, 1, grayImage.rows/32, 150, 50, 0, 0 );
+    cv::HoughCircles( grayImage, circles, cv::HOUGH_GRADIENT, 1, grayImage.rows/32, 150, 50);
 
     return circles;
 }
