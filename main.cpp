@@ -45,25 +45,60 @@ double pixelsToMeters(const int pixels, const cv::Mat& a4Paper) {
     return (double) pixels / a4Paper.cols * a4Width;
 }
 
-void drawCoinValue(const cv::Mat& image, const cv::Point& center, int radius, int value) {
+void drawCoinValue(cv::Mat& image, const cv::Point& center, int radius, int value) {
     cv::Point textLocation(center.x - 15, center.y - radius);
     cv::Scalar textColor(255, 255, 255);
     cv::putText(image, std::to_string(value), textLocation, cv::FONT_HERSHEY_PLAIN, 2, textColor);
 }
 
-void drawCoinLocation(const cv::Mat& image, const cv::Point& center, int radius) {
+void drawCoinLocation(cv::Mat& image, const cv::Point& center, int radius) {
     cv::circle(image, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
     cv::circle(image, center, radius, cv::Scalar(0,255,0), 1, 8, 0 );
 }
 
-void drawCoinInfo(const cv::Mat& image, const cv::Point& center, int radius, int value) {
+void drawCoinInfo(cv::Mat& image, const cv::Point& center, int radius, int value) {
     drawCoinValue(image, center, radius, value);
     drawCoinLocation(image, center, radius);
 }
 
+std::vector<cv::Point2i> getPaperSheetCoordinates(const cv::Mat& image) {
+    
+
+}
+
+cv::Mat getPaperSheetTransformationMatrix(const cv::Mat& image) {
+    //getting corner coordinates
+    std::vector<cv::Point2i> coordinates = getPaperSheetCoordinates(image);
+
+    cv::Point2f srcPoint[3];
+    cv::Point2f dstPoint[3];
+
+    srcPoint[1] = coordinates[0];
+    srcPoint[1] = coordinates[1];
+    srcPoint[1] = coordinates[2];
+
+    dstPoint[0] = cv::Point2f(0, 0);
+    dstPoint[1] = cv::Point2f(image.cols - 1, 0 );
+    dstPoint[2] = cv::Point2f(0, image.rows - 1 );
+
+    cv::Mat transformMatrix = cv::getAffineTransform(srcPoint, dstPoint);
+
+    return transformMatrix;
+}
+
+cv::Mat getPaperSheetRegion(const cv::Mat& image) {
+    const int sheetSize = 1000;
+    cv::Mat paperSheet = cv::Mat::zeros(sheetSize, (int)(sheetSize * 1.4142), image.type());
+
+    cv::Mat transformMatrix = getPaperSheetTransformationMatrix(image);
+
+    cv::warpAffine(image, paperSheet, transformMatrix, paperSheet.size());
+
+    return paperSheet;
+}
+
 int main() {
-    cv::Mat image;
-    image = cv::imread("coins2.jpg", 1);
+    cv::Mat image = cv::imread("coins2.jpg", 1);
 
     std::vector<cv::Vec3f> circles = getCoinLocations(image);
 
