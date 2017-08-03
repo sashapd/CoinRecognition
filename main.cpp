@@ -45,18 +45,18 @@ double pixelsToMeters(const int pixels, const cv::Mat& a4Paper) {
     return (double) pixels / a4Paper.cols * a4Width;
 }
 
-void drawCoinValue(const cv::Mat& image, cv::Point center, int radius, int value) {
+void drawCoinValue(const cv::Mat& image, const cv::Point& center, int radius, int value) {
     cv::Point textLocation(center.x - 15, center.y - radius);
     cv::Scalar textColor(255, 255, 255);
     cv::putText(image, std::to_string(value), textLocation, cv::FONT_HERSHEY_PLAIN, 2, textColor);
 }
 
-void drawCoinLocation(const cv::Mat& image, cv::Point center, int radius) {
+void drawCoinLocation(const cv::Mat& image, const cv::Point& center, int radius) {
     cv::circle(image, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
     cv::circle(image, center, radius, cv::Scalar(0,255,0), 1, 8, 0 );
 }
 
-void drawCoinInfo(const cv::Mat& image, cv::Point center, int radius, int value) {
+void drawCoinInfo(const cv::Mat& image, const cv::Point& center, int radius, int value) {
     drawCoinValue(image, center, radius, value);
     drawCoinLocation(image, center, radius);
 }
