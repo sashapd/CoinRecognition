@@ -15,7 +15,7 @@ std::vector<cv::Vec3f> getCoinLocations(const cv::Mat& image) {
 
     std::vector<cv::Vec3f> circles;
 
-    cv::HoughCircles( grayImage, circles, cv::HOUGH_GRADIENT, 1, grayImage.rows/32, 150, 50);
+    cv::HoughCircles( grayImage, circles, cv::HOUGH_GRADIENT, 1, grayImage.rows/64, 75, 40);
 
     return circles;
 }
@@ -91,9 +91,9 @@ std::vector<cv::Point2i> getPaperSheetCoordinates(const cv::Mat& image) {
 
 
 
-    cv::namedWindow("sdad");
-    cv::imshow("sdad", blured);
-    cv::waitKey(0);
+    //cv::namedWindow("sdad");
+    //cv::imshow("sdad", blured);
+    //cv::waitKey(0);
 
 
     std::vector<cv::Point2i> corners;
@@ -116,11 +116,11 @@ std::vector<cv::Point2i> getPaperSheetCoordinates(const cv::Mat& image) {
                          blockSize,
                          useHarrisDetector,
                          k );
-
+/*
     for (const auto &corner : corners) {
         cv::circle(image, corner, 10, cv::Scalar(255, 0, 0), 3);
     }
-
+*/
 
 
     std::vector<cv::Point2i> extremes;
@@ -138,9 +138,8 @@ std::vector<cv::Point2i> getPaperSheetCoordinates(const cv::Mat& image) {
     return extremes;
 }
 
-cv::Mat getPaperSheetTransformationMatrix(const cv::Mat& image) {
+cv::Mat getPaperSheetTransformationMatrix(const cv::Mat& image, const std::vector<cv::Point2i>& coordinates) {
     //getting corner coordinates
-    std::vector<cv::Point2i> coordinates = getPaperSheetCoordinates(image);
 
     cv::Point2f srcPoint[3];
     cv::Point2f dstPoint[3];
@@ -162,9 +161,13 @@ cv::Mat getPaperSheetRegion(const cv::Mat& image) {
     const int sheetSize = 1000;
     cv::Mat paperSheet = cv::Mat::zeros(sheetSize, (int)(sheetSize * 1.4142), image.type());
 
-    cv::Mat transformMatrix = getPaperSheetTransformationMatrix(image);
+    std::vector<cv::Point2i> coordinates = getPaperSheetCoordinates(image);
 
-    cv::warpAffine(image, paperSheet, transformMatrix, paperSheet.size());
+    cv::Mat transformMatrix = getPaperSheetTransformationMatrix(image, coordinates);
+    //cv::Vec2i old(coordinates[2].x - coordinates[1].x, coordinates[1].y - coordinates[0].y);
+    //cv::Vec2i newSize = transformMatrix.mul(old);
+
+    cv::warpAffine(image, paperSheet, transformMatrix, image.size());
 
     return paperSheet;
 }
@@ -174,17 +177,17 @@ int main() {
 
     cv::Mat region = getPaperSheetRegion(image);
 
-    std::vector<cv::Vec3f> circles = getCoinLocations(image);
+    std::vector<cv::Vec3f> circles = getCoinLocations(region);
 
     for(const auto& circle : circles) {
         cv::Point center(cvRound(circle[0]), cvRound(circle[1]));
         int radius = cvRound(circle[2]);
 
-        double radiusInMeters = pixelsToMeters(radius, image);
+        double radiusInMeters = pixelsToMeters(radius, region);
         int coinValue = coinValueByRadius(radiusInMeters * 2);
 
         std::cout << coinValue << " : " << radiusInMeters * 2 << std::endl;
-        drawCoinInfo(image, center, radius, coinValue);
+        drawCoinInfo(region, center, radius, coinValue);
     }
 
     imshow("Coin Recognition", region );
