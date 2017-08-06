@@ -8,14 +8,18 @@
 #include "opencv2/imgproc.hpp"
 
 std::vector<cv::Vec3f> getCoinLocations(const cv::Mat& image) {
-    cv::Mat grayImage;
-    cv::cvtColor(image, grayImage, cv::COLOR_BGR2GRAY);
+    cv::Mat newImg;
+    image.convertTo(newImg, -1, 1.1, 1);
 
-    GaussianBlur(grayImage, grayImage, cv::Size(9, 9), 2, 2 );
+    cv::Mat grayImage;
+    cv::cvtColor(newImg, grayImage, cv::COLOR_BGR2GRAY);
+
+    cv::Mat blured;
+    cv::GaussianBlur(grayImage, blured, cv::Size(9, 9), 2, 2 );
 
     std::vector<cv::Vec3f> circles;
 
-    cv::HoughCircles( grayImage, circles, cv::HOUGH_GRADIENT, 1, grayImage.rows/64, 75, 40);
+    cv::HoughCircles( blured, circles, cv::HOUGH_GRADIENT, 1, grayImage.rows/16, 70, 45);
 
     return circles;
 }
@@ -79,22 +83,13 @@ std::vector<cv::Point2i> getPaperSheetCoordinates(const cv::Mat& image) {
     cv::Mat hsvImg, thresholdedImg;
     cv::cvtColor(image, hsvImg, cv::COLOR_BGR2HSV);
 
-    cv::inRange(hsvImg, cv::Scalar(0, 0, 100), cv::Scalar(255, 75, 255), thresholdedImg);
-    //cv::Canny(thresholdedImg, thresholdedImg, 50, 200, 3);
-
+    cv::inRange(hsvImg, cv::Scalar(0, 0, 120), cv::Scalar(255, 75, 255), thresholdedImg);
 
     cv::Mat t;
     cv::bitwise_and(image, image, t, thresholdedImg);
 
     cv::Mat blured;
-    cv::GaussianBlur(t, blured, cv::Size(5, 5), 3);
-
-
-
-    //cv::namedWindow("sdad");
-    //cv::imshow("sdad", blured);
-    //cv::waitKey(0);
-
+    cv::GaussianBlur(t, blured, cv::Size(9, 9), 3);
 
     std::vector<cv::Point2i> corners;
     int maxCorners = 100;
@@ -116,68 +111,63 @@ std::vector<cv::Point2i> getPaperSheetCoordinates(const cv::Mat& image) {
                          blockSize,
                          useHarrisDetector,
                          k );
-/*
-    for (const auto &corner : corners) {
-        cv::circle(image, corner, 10, cv::Scalar(255, 0, 0), 3);
-    }
-*/
 
+    cv::Point2f imageCorners[4] = {
+                cv::Point2f(0, 0),
+                cv::Point2f(0, image.rows - 1),
+                cv::Point2f(image.cols - 1, image.rows - 1),
+                cv::Point2f(image.cols - 1, 0)
+    };
 
     std::vector<cv::Point2i> extremes;
+    for(int i = 0; i < 4; i++) {
+        extremes.push_back(findClosestTo(imageCorners[i], corners));
+    }
 
-    extremes.push_back(findClosestTo(cv::Point(0, 0), corners));
-    extremes.push_back(findClosestTo(cv::Point(0, image.rows - 1), corners));
-    extremes.push_back(findClosestTo(cv::Point(image.cols - 1, image.rows - 1), corners));
-    extremes.push_back(findClosestTo(cv::Point(image.cols, 0), corners));
-
-    //if(cv::norm(extremes[2] - extremes[1]) < cv::norm(extremes[2] - extremes[3])) {
-        //extremes.erase(extremes.begin() + 2);
-    //} else {
-        extremes.erase(extremes.begin() + 3);
+    //if(cv::norm(extremes[2] - extremes[1]) < cv::norm(extremes[1] - extremes[0])) {
+        //extremes.push_back(extremes[0])
+        //extremes.erase(extremes.begin());
     //}
+
     return extremes;
 }
 
-cv::Mat getPaperSheetTransformationMatrix(const cv::Mat& image, const std::vector<cv::Point2i>& coordinates) {
-    //getting corner coordinates
+const int paperSheedHeight = 1000;
+const int paperSheedWidth = paperSheedHeight * 1.41421356237;
 
-    cv::Point2f srcPoint[3];
-    cv::Point2f dstPoint[3];
+cv::Mat getPaperSheetTransformationMatrix(const cv::Mat& image) {
+    std::vector<cv::Point2i> coordinates = getPaperSheetCoordinates(image);
 
-    srcPoint[0] = coordinates[0];
-    srcPoint[1] = coordinates[1];
-    srcPoint[2] = coordinates[2];
+    cv::Point2f srcPoint[4];
+    std::copy(coordinates.begin(), coordinates.end(), srcPoint);
 
-    dstPoint[0] = cv::Point2f(0, 0);
-    dstPoint[1] = cv::Point2f(0, image.rows - 1);
-    dstPoint[2] = cv::Point2f(image.cols - 1, image.rows - 1);
+    cv::Point2f dstPoint[4] = {
+            cv::Point2f(0, 0),
+            cv::Point2f(0, paperSheedHeight - 1),
+            cv::Point2f(paperSheedWidth - 1, paperSheedHeight - 1),
+            cv::Point2f(paperSheedWidth - 1, 0)
+    };
 
-    cv::Mat transformMatrix = cv::getAffineTransform(srcPoint, dstPoint);
+    cv::Mat transformMatrix = cv::getPerspectiveTransform(srcPoint, dstPoint);
 
     return transformMatrix;
 }
 
 cv::Mat getPaperSheetRegion(const cv::Mat& image) {
-    const int sheetSize = 1000;
-    cv::Mat paperSheet = cv::Mat::zeros(sheetSize, (int)(sheetSize * 1.4142), image.type());
+    cv::Mat paperSheet(paperSheedHeight, paperSheedWidth, CV_8UC3);
 
-    std::vector<cv::Point2i> coordinates = getPaperSheetCoordinates(image);
-
-    cv::Mat transformMatrix = getPaperSheetTransformationMatrix(image, coordinates);
-    //cv::Vec2i old(coordinates[2].x - coordinates[1].x, coordinates[1].y - coordinates[0].y);
-    //cv::Vec2i newSize = transformMatrix.mul(old);
-
-    cv::warpAffine(image, paperSheet, transformMatrix, image.size());
+    cv::Mat transformMatrix = getPaperSheetTransformationMatrix(image);
+    cv::warpPerspective(image, paperSheet, transformMatrix, paperSheet.size());
 
     return paperSheet;
 }
 
 int main() {
-    cv::Mat image = cv::imread("coins5.jpg", 1);
-
+    cv::Mat image = cv::imread("coins7.jpg", 1);
     cv::Mat region = getPaperSheetRegion(image);
 
     std::vector<cv::Vec3f> circles = getCoinLocations(region);
+
 
     for(const auto& circle : circles) {
         cv::Point center(cvRound(circle[0]), cvRound(circle[1]));
@@ -190,8 +180,9 @@ int main() {
         drawCoinInfo(region, center, radius, coinValue);
     }
 
-    imshow("Coin Recognition", region );
-
+    cv::Mat regionResized;
+    cv::resize(region, regionResized, cv::Size(), 0.75, 0.75);
+    imshow("Coin Recognition", regionResized );
     cv::waitKey(0);
     return 0;
 }
