@@ -163,11 +163,10 @@ cv::Mat getPaperSheetRegion(const cv::Mat& image) {
 }
 
 int main() {
-    cv::Mat image = cv::imread("coins10.jpg", 1);
+    cv::Mat image = cv::imread("coins2.jpg", 1);
     cv::Mat region = getPaperSheetRegion(image);
 
     std::vector<cv::Vec3f> circles = getCoinLocations(region);
-
 
     for(const auto& circle : circles) {
         cv::Point center(cvRound(circle[0]), cvRound(circle[1]));
