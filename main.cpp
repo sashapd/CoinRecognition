@@ -9,7 +9,7 @@
 
 std::vector<cv::Vec3f> getCoinLocations(const cv::Mat& image) {
     cv::Mat newImg;
-    image.convertTo(newImg, -1, 1.1, 1);
+    image.convertTo(newImg, -1, 1.1, 0);
 
     cv::Mat grayImage;
     cv::cvtColor(newImg, grayImage, cv::COLOR_BGR2GRAY);
@@ -80,16 +80,15 @@ cv::Point2i findClosestTo(const cv::Point2i& point, const std::vector<cv::Point2
 
 
 std::vector<cv::Point2i> getPaperSheetCoordinates(const cv::Mat& image) {
-    cv::Mat hsvImg, thresholdedImg;
+    cv::Mat hsvImg, thresholdedImg, thresholdMask;
     cv::cvtColor(image, hsvImg, cv::COLOR_BGR2HSV);
 
-    cv::inRange(hsvImg, cv::Scalar(0, 0, 120), cv::Scalar(255, 75, 255), thresholdedImg);
+    cv::inRange(hsvImg, cv::Scalar(0, 0, 120), cv::Scalar(255, 75, 255), thresholdMask);
 
-    cv::Mat t;
-    cv::bitwise_and(image, image, t, thresholdedImg);
+    cv::bitwise_and(image, image, thresholdedImg, thresholdMask);
 
     cv::Mat blured;
-    cv::GaussianBlur(t, blured, cv::Size(9, 9), 3);
+    cv::GaussianBlur(thresholdedImg, blured, cv::Size(9, 9), 3);
 
     std::vector<cv::Point2i> corners;
     int maxCorners = 100;
@@ -107,7 +106,7 @@ std::vector<cv::Point2i> getPaperSheetCoordinates(const cv::Mat& image) {
                          maxCorners,
                          qualityLevel,
                          minDistance,
-                         thresholdedImg,
+                         thresholdMask,
                          blockSize,
                          useHarrisDetector,
                          k );
@@ -124,10 +123,11 @@ std::vector<cv::Point2i> getPaperSheetCoordinates(const cv::Mat& image) {
         extremes.push_back(findClosestTo(imageCorners[i], corners));
     }
 
-    //if(cv::norm(extremes[2] - extremes[1]) < cv::norm(extremes[1] - extremes[0])) {
-        //extremes.push_back(extremes[0])
-        //extremes.erase(extremes.begin());
-    //}
+    //change coordinates order if the paper sheet is rotated 90 degrees
+    if(cv::norm(extremes[2] - extremes[1]) < cv::norm(extremes[1] - extremes[0])) {
+        extremes.push_back(extremes[0]);
+        extremes.erase(extremes.begin());
+    }
 
     return extremes;
 }
@@ -163,7 +163,7 @@ cv::Mat getPaperSheetRegion(const cv::Mat& image) {
 }
 
 int main() {
-    cv::Mat image = cv::imread("coins7.jpg", 1);
+    cv::Mat image = cv::imread("coins10.jpg", 1);
     cv::Mat region = getPaperSheetRegion(image);
 
     std::vector<cv::Vec3f> circles = getCoinLocations(region);
