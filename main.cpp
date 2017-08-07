@@ -50,14 +50,20 @@ double pixelsToMeters(const int pixels, const cv::Mat& a4Paper) {
 }
 
 void drawCoinValue(cv::Mat& image, const cv::Point& center, const int radius, const int value) {
-    cv::Point textLocation(center.x - 15, center.y - radius);
-    cv::Scalar textColor(255, 255, 255);
-    cv::putText(image, std::to_string(value), textLocation, cv::FONT_HERSHEY_PLAIN, 2, textColor);
+    int xOffset;
+    if(value < 10) {
+        xOffset = 20;
+    } else {
+        xOffset = 42;
+    }
+    cv::Point textLocation(center.x - xOffset, center.y - radius);
+    cv::Scalar textColor(0, 0, 0);
+    cv::putText(image, std::to_string(value), textLocation, cv::FONT_HERSHEY_PLAIN, 4, textColor);
 }
 
 void drawCoinLocation(cv::Mat& image, const cv::Point& center, const int radius) {
     cv::circle(image, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
-    cv::circle(image, center, radius, cv::Scalar(0,255,0), 1, 8, 0 );
+    cv::circle(image, center, radius, cv::Scalar(0,255,0), 2, 8, 0 );
 }
 
 void drawCoinInfo(cv::Mat& image, const cv::Point& center, const int radius, const int value) {
@@ -66,9 +72,18 @@ void drawCoinInfo(cv::Mat& image, const cv::Point& center, const int radius, con
 }
 
 void drawTotalValue(cv::Mat& image, const int totalValue) {
-    cv::Point textLocation(image.cols / 2 - 350, image.rows - 50);
-    cv::Scalar textColor(255, 255, 255);
+    cv::Point textLocation(image.cols / 2 - 400, image.rows - 50);
+    cv::Scalar textColor(0, 0, 0);
     cv::putText(image, "Total Value: " + std::to_string(totalValue), textLocation, cv::FONT_HERSHEY_TRIPLEX, 3, textColor);
+}
+
+void drawFrame(cv::Mat& image) {
+    cv::Scalar color(100, 200, 100);
+    int thickness = 10;
+    cv::line(image, cv::Point(0, 0), cv::Point(0, image.rows - 1), color, thickness);
+    cv::line(image, cv::Point(0, image.rows - 1), cv::Point(image.cols - 1, image.rows - 1), color, thickness);
+    cv::line(image, cv::Point(image.cols - 1, image.rows - 1), cv::Point(image.cols - 1, 0), color, thickness);
+    cv::line(image, cv::Point(image.cols - 1, 0), cv::Point(0, 0), color, thickness);
 }
 
 cv::Point2i findClosestTo(const cv::Point2i& point, const std::vector<cv::Point2i>& points) {
@@ -168,11 +183,34 @@ cv::Mat getPaperSheetRegion(const cv::Mat& image) {
     return paperSheet;
 }
 
+void putPaperRegion(cv::Mat& image, cv::Mat& region) {
+    const std::vector<cv::Point2i> coordinates = getPaperSheetCoordinates(image);
+
+    cv::Point2f srcPoint[4] = {
+            cv::Point2f(0, 0),
+            cv::Point2f(0, paperSheedHeight - 1),
+            cv::Point2f(paperSheedWidth - 1, paperSheedHeight - 1),
+            cv::Point2f(paperSheedWidth - 1, 0)
+    };
+
+    cv::Point2f dstPoint[4];
+    std::copy(coordinates.begin(), coordinates.end(), dstPoint);
+
+    cv::Mat transformMatrix = cv::getPerspectiveTransform(srcPoint, dstPoint);
+    cv::Mat transformedRegion(image.rows, image.cols, CV_8UC3);
+    cv::warpPerspective(region, transformedRegion, transformMatrix, image.size());
+
+    cv::Mat mask = transformedRegion > 0;
+
+    transformedRegion.copyTo(image, mask);
+}
+
 int main() {
-    cv::Mat image = cv::imread("coins2.jpg", 1);
+    cv::Mat image = cv::imread("coins3.jpg", 1);
     cv::Mat region = getPaperSheetRegion(image);
 
     std::vector<cv::Vec3f> circles = getCoinLocations(region);
+    drawFrame(region);
 
     int totalValue = 0;
 
@@ -190,9 +228,12 @@ int main() {
 
     drawTotalValue(region, totalValue);
 
-    cv::Mat regionResized;
-    cv::resize(region, regionResized, cv::Size(), 0.75, 0.75);
-    imshow("Coin Recognition", regionResized );
+    putPaperRegion(image, region);
+
+    cv::Mat imageResized;
+    int newWidth = 1000;
+    cv::resize(image, imageResized, cv::Size(newWidth, newWidth * image.rows / image.cols));
+    cv::imshow("Coin Recognition", imageResized );
     cv::waitKey(0);
     return 0;
 }
