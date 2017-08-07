@@ -183,7 +183,7 @@ cv::Mat getPaperSheetRegion(const cv::Mat& image) {
     return paperSheet;
 }
 
-void putPaperRegion(cv::Mat& image, cv::Mat& region) {
+void combinePaperRegion(cv::Mat& image, cv::Mat& region) {
     const std::vector<cv::Point2i> coordinates = getPaperSheetCoordinates(image);
 
     cv::Point2f srcPoint[4] = {
@@ -206,7 +206,7 @@ void putPaperRegion(cv::Mat& image, cv::Mat& region) {
 }
 
 int main() {
-    cv::Mat image = cv::imread("coins3.jpg", 1);
+    cv::Mat image = cv::imread("coins4.jpg", 1);
     cv::Mat region = getPaperSheetRegion(image);
 
     std::vector<cv::Vec3f> circles = getCoinLocations(region);
@@ -221,14 +221,13 @@ int main() {
         double radiusInMeters = pixelsToMeters(radius, region);
         int coinValue = coinValueByRadius(radiusInMeters * 2);
         totalValue += coinValue;
-
-        std::cout << coinValue << " : " << radiusInMeters * 2 << std::endl;
+        
         drawCoinInfo(region, center, radius, coinValue);
     }
 
     drawTotalValue(region, totalValue);
 
-    putPaperRegion(image, region);
+    combinePaperRegion(image, region);
 
     cv::Mat imageResized;
     int newWidth = 1000;
