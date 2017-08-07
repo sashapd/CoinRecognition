@@ -109,7 +109,7 @@ std::vector<cv::Point2i> getPaperSheetCoordinates(const cv::Mat& image) {
     cv::bitwise_and(image, image, thresholdedImg, thresholdMask);
 
     cv::Mat blured;
-    cv::GaussianBlur(thresholdedImg, blured, cv::Size(9, 9), 3);
+    cv::GaussianBlur(thresholdedImg, blured, cv::Size(9, 9), 2.5);
 
     std::vector<cv::Point2i> corners;
     int maxCorners = 100;
@@ -206,7 +206,7 @@ void combinePaperRegion(cv::Mat& image, cv::Mat& region) {
 }
 
 int main() {
-    cv::Mat image = cv::imread("coins4.jpg", 1);
+    cv::Mat image = cv::imread("coins3.jpg", 1);
     cv::Mat region = getPaperSheetRegion(image);
 
     std::vector<cv::Vec3f> circles = getCoinLocations(region);
@@ -221,7 +221,7 @@ int main() {
         double radiusInMeters = pixelsToMeters(radius, region);
         int coinValue = coinValueByRadius(radiusInMeters * 2);
         totalValue += coinValue;
-        
+
         drawCoinInfo(region, center, radius, coinValue);
     }
 
