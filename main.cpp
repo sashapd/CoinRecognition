@@ -49,20 +49,26 @@ double pixelsToMeters(const int pixels, const cv::Mat& a4Paper) {
     return (double) pixels / a4Paper.cols * a4Width;
 }
 
-void drawCoinValue(cv::Mat& image, const cv::Point& center, int radius, int value) {
+void drawCoinValue(cv::Mat& image, const cv::Point& center, const int radius, const int value) {
     cv::Point textLocation(center.x - 15, center.y - radius);
     cv::Scalar textColor(255, 255, 255);
     cv::putText(image, std::to_string(value), textLocation, cv::FONT_HERSHEY_PLAIN, 2, textColor);
 }
 
-void drawCoinLocation(cv::Mat& image, const cv::Point& center, int radius) {
+void drawCoinLocation(cv::Mat& image, const cv::Point& center, const int radius) {
     cv::circle(image, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
     cv::circle(image, center, radius, cv::Scalar(0,255,0), 1, 8, 0 );
 }
 
-void drawCoinInfo(cv::Mat& image, const cv::Point& center, int radius, int value) {
+void drawCoinInfo(cv::Mat& image, const cv::Point& center, const int radius, const int value) {
     drawCoinValue(image, center, radius, value);
     drawCoinLocation(image, center, radius);
+}
+
+void drawTotalValue(cv::Mat& image, const int totalValue) {
+    cv::Point textLocation(image.cols / 2 - 350, image.rows - 50);
+    cv::Scalar textColor(255, 255, 255);
+    cv::putText(image, "Total Value: " + std::to_string(totalValue), textLocation, cv::FONT_HERSHEY_TRIPLEX, 3, textColor);
 }
 
 cv::Point2i findClosestTo(const cv::Point2i& point, const std::vector<cv::Point2i>& points) {
@@ -168,16 +174,21 @@ int main() {
 
     std::vector<cv::Vec3f> circles = getCoinLocations(region);
 
+    int totalValue = 0;
+
     for(const auto& circle : circles) {
         cv::Point center(cvRound(circle[0]), cvRound(circle[1]));
         int radius = cvRound(circle[2]);
 
         double radiusInMeters = pixelsToMeters(radius, region);
         int coinValue = coinValueByRadius(radiusInMeters * 2);
+        totalValue += coinValue;
 
         std::cout << coinValue << " : " << radiusInMeters * 2 << std::endl;
         drawCoinInfo(region, center, radius, coinValue);
     }
+
+    drawTotalValue(region, totalValue);
 
     cv::Mat regionResized;
     cv::resize(region, regionResized, cv::Size(), 0.75, 0.75);
