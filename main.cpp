@@ -8,22 +8,22 @@
 #include "opencv2/imgproc.hpp"
 
 std::vector<cv::Vec3f> getCoinLocations(const cv::Mat& image) {
-    cv::Mat newImg;
-    image.convertTo(newImg, -1, 1.1, 0);
+    //cv::Mat newImg;
+    //image.convertTo(newImg, -1, 1.1, 0);
 
     cv::Mat grayImage;
-    cv::cvtColor(newImg, grayImage, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(image, grayImage, cv::COLOR_BGR2GRAY);
 
     cv::Mat blured;
     cv::GaussianBlur(grayImage, blured, cv::Size(9, 9), 2, 2 );
 
     std::vector<cv::Vec3f> circles;
 
-    cv::HoughCircles( blured, circles, cv::HOUGH_GRADIENT, 1, grayImage.rows/16, 70, 45);
+    cv::HoughCircles( blured, circles, cv::HOUGH_GRADIENT, 1, grayImage.rows/16, 100, 45);
 
     return circles;
 }
-
+//TODO: delete
 int coinValueByRadius(const double diameter) {
     const std::map<double, int> coins {{0.016, 1},
                                        {0.0173, 2},
@@ -44,11 +44,11 @@ int coinValueByRadius(const double diameter) {
     return mostLikelyCoin;
 }
 
-double pixelsToMeters(const int pixels, const cv::Mat& a4Paper) {
+double pixelsToMeters(const double pixels, const cv::Mat& a4Paper) {
     const double a4Width = 0.297;
-    return (double) pixels / a4Paper.cols * a4Width;
+    return pixels / a4Paper.cols * a4Width;
 }
-
+//TODO: delete
 void drawCoinValue(cv::Mat& image, const cv::Point& center, const int radius, const int value) {
     int xOffset;
     if(value < 10) {
@@ -60,12 +60,12 @@ void drawCoinValue(cv::Mat& image, const cv::Point& center, const int radius, co
     cv::Scalar textColor(0, 0, 0);
     cv::putText(image, std::to_string(value), textLocation, cv::FONT_HERSHEY_PLAIN, 4, textColor);
 }
-
+//TODO: delete
 void drawCoinLocation(cv::Mat& image, const cv::Point& center, const int radius) {
     cv::circle(image, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
     cv::circle(image, center, radius, cv::Scalar(0,255,0), 2, 8, 0 );
 }
-
+//TODO: delete
 void drawCoinInfo(cv::Mat& image, const cv::Point& center, const int radius, const int value) {
     drawCoinValue(image, center, radius, value);
     drawCoinLocation(image, center, radius);
@@ -101,36 +101,27 @@ cv::Point2i findClosestTo(const cv::Point2i& point, const std::vector<cv::Point2
 
 
 std::vector<cv::Point2i> getPaperSheetCoordinates(const cv::Mat& image) {
-    cv::Mat hsvImg, thresholdedImg, thresholdMask;
-    cv::cvtColor(image, hsvImg, cv::COLOR_BGR2HSV);
+    cv::Mat im = image.clone();
+    cv::Mat cannyOut;
+    cv::Canny(image, cannyOut, 100, 200);
+    std::vector<std::vector<cv::Point> > contours;
+    cv::findContours(cannyOut, contours,CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
-    cv::inRange(hsvImg, cv::Scalar(0, 0, 120), cv::Scalar(255, 75, 255), thresholdMask);
+    std::vector<cv::Point> maxCountour;
+    double maxArea = 0;
 
-    cv::bitwise_and(image, image, thresholdedImg, thresholdMask);
+    for(int i = 0; i< contours.size(); i++) {
+        std::vector<cv::Point>& countour = contours[i];
+        double area = cv::contourArea(countour);
+        if(area > maxArea) {
+            maxCountour = countour;
+            maxArea = area;
+        }
+    }
+    double perimeter = cv::arcLength(maxCountour, true);
 
-    cv::Mat blured;
-    cv::GaussianBlur(thresholdedImg, blured, cv::Size(9, 9), 2.5);
-
-    std::vector<cv::Point2i> corners;
-    int maxCorners = 100;
-    double qualityLevel = 0.01;
-    double minDistance = 10;
-    int blockSize = 3;
-    bool useHarrisDetector = true;
-    double k = 0.04;
-
-    cv::Mat grayImg;
-    cv::cvtColor(blured, grayImg, cv::COLOR_BGR2GRAY);
-    /// Apply corner detection
-    cv::goodFeaturesToTrack( grayImg,
-                         corners,
-                         maxCorners,
-                         qualityLevel,
-                         minDistance,
-                         thresholdMask,
-                         blockSize,
-                         useHarrisDetector,
-                         k );
+    std::vector<cv::Point> p;
+    cv::approxPolyDP(maxCountour, p, perimeter * 0.02, true);
 
     cv::Point2f imageCorners[4] = {
                 cv::Point2f(0, 0),
@@ -141,7 +132,7 @@ std::vector<cv::Point2i> getPaperSheetCoordinates(const cv::Mat& image) {
 
     std::vector<cv::Point2i> extremes;
     for(int i = 0; i < 4; i++) {
-        extremes.push_back(findClosestTo(imageCorners[i], corners));
+        extremes.push_back(findClosestTo(imageCorners[i], p));
     }
 
     //change coordinates order if the paper sheet is rotated 90 degrees
@@ -216,7 +207,7 @@ int main() {
 
     for(const auto& circle : circles) {
         cv::Point center(cvRound(circle[0]), cvRound(circle[1]));
-        int radius = cvRound(circle[2]);
+        double radius = circle[2];
 
         double radiusInMeters = pixelsToMeters(radius, region);
         int coinValue = coinValueByRadius(radiusInMeters * 2);
