@@ -6,11 +6,9 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include "opencv2/imgproc.hpp"
+#include "Coin.h"
 
-std::vector<cv::Vec3f> getCoinLocations(const cv::Mat& image) {
-    //cv::Mat newImg;
-    //image.convertTo(newImg, -1, 1.1, 0);
-
+std::vector<Coin> getCoins(const cv::Mat& image) {
     cv::Mat grayImage;
     cv::cvtColor(image, grayImage, cv::COLOR_BGR2GRAY);
 
@@ -21,54 +19,13 @@ std::vector<cv::Vec3f> getCoinLocations(const cv::Mat& image) {
 
     cv::HoughCircles( blured, circles, cv::HOUGH_GRADIENT, 1, grayImage.rows/16, 100, 45);
 
-    return circles;
-}
-//TODO: delete
-int coinValueByRadius(const double diameter) {
-    const std::map<double, int> coins {{0.016, 1},
-                                       {0.0173, 2},
-                                       {0.024, 5},
-                                       {0.0163, 10},
-                                       {0.0208, 25},
-                                       {0.023, 50},
-                                       {0.026, 100}};
-    double minDiff = fabs(coins.begin()->first - diameter);
-    int mostLikelyCoin = coins.begin()->second;
-    for(const auto& element : coins) {
-        double diameterDiff = fabs(element.first - diameter);
-        if(diameterDiff < minDiff) {
-            minDiff = diameterDiff;
-            mostLikelyCoin = element.second;
-        }
-    }
-    return mostLikelyCoin;
-}
+    std::vector<Coin> coins;
 
-double pixelsToMeters(const double pixels, const cv::Mat& a4Paper) {
-    const double a4Width = 0.297;
-    return pixels / a4Paper.cols * a4Width;
-}
-//TODO: delete
-void drawCoinValue(cv::Mat& image, const cv::Point& center, const int radius, const int value) {
-    int xOffset;
-    if(value < 10) {
-        xOffset = 20;
-    } else {
-        xOffset = 42;
+    for(auto it = circles.begin(); it != circles.end(); it++) {
+        coins.push_back(Coin(*it, image));
     }
-    cv::Point textLocation(center.x - xOffset, center.y - radius);
-    cv::Scalar textColor(0, 0, 0);
-    cv::putText(image, std::to_string(value), textLocation, cv::FONT_HERSHEY_PLAIN, 4, textColor);
-}
-//TODO: delete
-void drawCoinLocation(cv::Mat& image, const cv::Point& center, const int radius) {
-    cv::circle(image, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
-    cv::circle(image, center, radius, cv::Scalar(0,255,0), 2, 8, 0 );
-}
-//TODO: delete
-void drawCoinInfo(cv::Mat& image, const cv::Point& center, const int radius, const int value) {
-    drawCoinValue(image, center, radius, value);
-    drawCoinLocation(image, center, radius);
+
+    return coins;
 }
 
 void drawTotalValue(cv::Mat& image, const int totalValue) {
@@ -200,20 +157,16 @@ int main() {
     cv::Mat image = cv::imread("coins3.jpg", 1);
     cv::Mat region = getPaperSheetRegion(image);
 
-    std::vector<cv::Vec3f> circles = getCoinLocations(region);
+    std::vector<Coin> coins = getCoins(region);
     drawFrame(region);
 
     int totalValue = 0;
 
-    for(const auto& circle : circles) {
-        cv::Point center(cvRound(circle[0]), cvRound(circle[1]));
-        double radius = circle[2];
-
-        double radiusInMeters = pixelsToMeters(radius, region);
-        int coinValue = coinValueByRadius(radiusInMeters * 2);
+    for(const auto& coin : coins) {
+        int coinValue = coin.getValue();
         totalValue += coinValue;
 
-        drawCoinInfo(region, center, radius, coinValue);
+        coin.drawInfo(region);
     }
 
     drawTotalValue(region, totalValue);
@@ -225,5 +178,6 @@ int main() {
     cv::resize(image, imageResized, cv::Size(newWidth, newWidth * image.rows / image.cols));
     cv::imshow("Coin Recognition", imageResized );
     cv::waitKey(0);
+
     return 0;
 }
