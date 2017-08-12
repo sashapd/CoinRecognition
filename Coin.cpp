@@ -7,7 +7,7 @@
 #include <opencv2/imgproc.hpp>
 
 
-Coin::Coin(cv::Vec3f circle, const cv::Mat& image) {
+Coin::Coin(const cv::Vec3f& circle, const cv::Mat& image) {
     position.x = cvRound(circle[0]);
     position.y = cvRound(circle[1]);
     radius = circle[2];

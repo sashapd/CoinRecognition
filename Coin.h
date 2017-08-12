@@ -10,7 +10,7 @@
 
 class Coin {
 public:
-    Coin(cv::Vec3f, const cv::Mat& image);
+    Coin(const cv::Vec3f& circle, const cv::Mat& image);
 
     int getValue() const;
     void drawInfo(cv::Mat& image) const;
