@@ -15,9 +15,9 @@ public:
     int getValue() const;
     void drawInfo(cv::Mat& image) const;
 private:
-    cv::Point position;
-    double radius;
-    int value;
+    cv::Point mPosition;
+    double mRadius;
+    int mValue;
 
     enum Color {
         YELLOW,

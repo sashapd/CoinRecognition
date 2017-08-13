@@ -9,13 +9,13 @@
 
 
 Coin::Coin(const cv::Vec3f& circle, const cv::Mat& image) {
-    position.x = cvRound(circle[0]);
-    position.y = cvRound(circle[1]);
-    radius = circle[2];
+    mPosition.x = cvRound(circle[0]);
+    mPosition.y = cvRound(circle[1]);
+    mRadius = circle[2];
 
     Color color = getCoinColor(image);
-    double radiusInMeters = pixelsToMeters(radius, image);
-    value = coinValueByRadius(radiusInMeters * 2, color);
+    double radiusInMeters = pixelsToMeters(mRadius, image);
+    mValue = coinValueByRadius(radiusInMeters * 2, color);
 }
 
 double Coin::pixelsToMeters(const double pixels, const cv::Mat& a4Paper) const {
@@ -55,39 +55,37 @@ void Coin::drawInfo(cv::Mat &image) const {
 
 void Coin::drawOutline(cv::Mat &image) const {
     cv::Scalar color(0,255,0);
-    cv::circle(image, position, 3, color, -1, 8, 0 );
-    cv::circle(image, position, radius, color, 2, 8, 0 );
+    cv::circle(image, mPosition, 3, color, -1, 8, 0 );
+    cv::circle(image, mPosition, mRadius, color, 2, 8, 0 );
 }
 
 void Coin::drawValue(cv::Mat &image) const {
     int xOffset;
-    if(value < 10) {
+    if(mValue < 10) {
         xOffset = 20;
     } else {
         xOffset = 42;
     }
-    cv::Point textLocation(position.x - xOffset, position.y - radius);
+    cv::Point textLocation(mPosition.x - xOffset, mPosition.y - mRadius);
     cv::Scalar textColor(0, 0, 0);
-    cv::putText(image, std::to_string(value), textLocation, cv::FONT_HERSHEY_PLAIN, 4, textColor);
+    cv::putText(image, std::to_string(mValue), textLocation, cv::FONT_HERSHEY_PLAIN, 4, textColor);
 }
 
 int Coin::getValue() const {
-    return value;
+    return mValue;
 }
 
 Coin::Color Coin::getCoinColor(const cv::Mat &image) const {
-    cv::Rect boundingRect(position.x - radius, position.y - radius, radius * 2 + 1, radius * 2 + 1);
+    /*
+    cv::Rect boundingRect(mPosition.x - mRadius, mPosition.y - mRadius, mRadius * 2 + 1, mRadius * 2 + 1);
     cv::Mat circleROI(image, boundingRect);
 
     cv::Mat hsv;
     cv::Mat rgb;
     cv::Mat region;
     cv::Mat circularMask = cv::Mat::zeros(circleROI.size(), CV_8UC1);
-    cv::circle(circularMask, circularMask.size() / 2, radius, 255, -1, 8, 0 );
+    cv::circle(circularMask, circularMask.size() / 2, mRadius, 255, -1, 8, 0 );
 
-    //region = circleROI.clone();
-    //cv::Scalar meanColor = cv::mean(region, circularMask);
-    //cv::cvtColor(circleROI, hsv, cv::COLOR_BGR2HSV);
     cv::Scalar meanColor = cv::mean(circleROI, circularMask);
     cv::Scalar hM;
     cv::Mat m(1, 1, CV_8UC3);
@@ -97,7 +95,7 @@ Coin::Color Coin::getCoinColor(const cv::Mat &image) const {
     meanColor = hM;
     circleROI = meanColor;
 
-    cv::putText(image, "HSV: " + std::to_string(int(meanColor.val[0])) + " " + std::to_string(int(meanColor.val[1])) + " " + std::to_string(int(meanColor.val[2])), position, cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 0, 0));
+    cv::putText(image, "HSV: " + std::to_string(int(meanColor.val[0])) + " " + std::to_string(int(meanColor.val[1])) + " " + std::to_string(int(meanColor.val[2])), mPosition, cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 0, 0));
 
     int saturation = (int) meanColor.val[1];
     if(saturation > 50) {
@@ -106,6 +104,7 @@ Coin::Color Coin::getCoinColor(const cv::Mat &image) const {
         return SILVER;
     } else {
         return UNKNOWN;
-    }
+    */
+    return UNKNOWN;
 }
 
