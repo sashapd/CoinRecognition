@@ -58,11 +58,10 @@ cv::Point2i findClosestTo(const cv::Point2i& point, const std::vector<cv::Point2
 
 
 std::vector<cv::Point2i> getPaperSheetCoordinates(const cv::Mat& image) {
-    cv::Mat im = image.clone();
     cv::Mat cannyOut;
     cv::Canny(image, cannyOut, 100, 200);
     std::vector<std::vector<cv::Point> > contours;
-    cv::findContours(cannyOut, contours,CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+    cv::findContours(cannyOut, contours, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
     std::vector<cv::Point> maxCountour;
     double maxArea = 0;
@@ -154,7 +153,7 @@ void combinePaperRegion(cv::Mat& image, cv::Mat& region) {
 }
 
 int main() {
-    cv::Mat image = cv::imread("coins3.jpg", 1);
+    cv::Mat image = cv::imread("coins6.jpg", 1);
     cv::Mat region = getPaperSheetRegion(image);
 
     std::vector<Coin> coins = getCoins(region);

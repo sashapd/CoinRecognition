@@ -21,7 +21,8 @@ private:
 
     enum Color {
         YELLOW,
-        SILVER
+        SILVER,
+        UNKNOWN
     };
 
     Color getCoinColor(const cv::Mat& image) const;

@@ -5,6 +5,7 @@
 #include "Coin.h"
 #include <map>
 #include <opencv2/imgproc.hpp>
+#include <opencv/cv.hpp>
 
 
 Coin::Coin(const cv::Vec3f& circle, const cv::Mat& image) {
@@ -24,10 +25,15 @@ double Coin::pixelsToMeters(const double pixels, const cv::Mat& a4Paper) const {
 
 int Coin::coinValueByRadius(const double diameter, Color color) const {
     std::map<double, int> coins;
+    std::map<double, int> yellowCoins = {{0.0163, 10}, {0.0208, 25}, {0.023, 50}, {0.026, 100}};
+    std::map<double, int> silverCoins = {{0.016, 1}, {0.0173, 2}, {0.024, 5}};
     if(color == YELLOW) {
-        coins = {{0.0163, 10}, {0.0208, 25}, {0.023, 50}, {0.026, 100}};
+        coins = yellowCoins;
     } else if (color == SILVER) {
-        coins = {{0.016, 1}, {0.0173, 2}, {0.024, 5}};
+        coins = silverCoins;
+    } else {
+        coins.insert(yellowCoins.begin(), yellowCoins.end());
+        coins.insert(silverCoins.begin(), silverCoins.end());
     }
 
     double minDiff = fabs(coins.begin()->first - diameter);
@@ -74,11 +80,32 @@ Coin::Color Coin::getCoinColor(const cv::Mat &image) const {
     cv::Mat circleROI(image, boundingRect);
 
     cv::Mat hsv;
-    cv::cvtColor(image, hsv, cv::COLOR_BGR2HSV);
+    cv::Mat rgb;
+    cv::Mat region;
+    cv::Mat circularMask = cv::Mat::zeros(circleROI.size(), CV_8UC1);
+    cv::circle(circularMask, circularMask.size() / 2, radius, 255, -1, 8, 0 );
 
-    cv::Mat yellowMask;
-    cv::inRange(hsv, cv::Scalar(30, 40, 40), cv::Scalar(45, 255, 255), yellowMask);
+    //region = circleROI.clone();
+    //cv::Scalar meanColor = cv::mean(region, circularMask);
+    //cv::cvtColor(circleROI, hsv, cv::COLOR_BGR2HSV);
+    cv::Scalar meanColor = cv::mean(circleROI, circularMask);
+    cv::Scalar hM;
+    cv::Mat m(1, 1, CV_8UC3);
+    m.setTo(meanColor);
+    cv::cvtColor(m, m, cv::COLOR_BGR2HSV);
+    hM = m.at<cv::Vec3b>(0, 0);
+    meanColor = hM;
+    circleROI = meanColor;
 
-    return SILVER;
+    cv::putText(image, "HSV: " + std::to_string(int(meanColor.val[0])) + " " + std::to_string(int(meanColor.val[1])) + " " + std::to_string(int(meanColor.val[2])), position, cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 0, 0));
+
+    int saturation = (int) meanColor.val[1];
+    if(saturation > 50) {
+        return YELLOW;
+    } else if (saturation < 40) {
+        return SILVER;
+    } else {
+        return UNKNOWN;
+    }
 }
 
