@@ -13,12 +13,14 @@ PapersheetExtractor::PapersheetExtractor(const cv::Mat &image) {
 
 cv::Mat PapersheetExtractor::getPaperSheetRegion() {
     findPaperSheetCoordinates(mImage);
-    cv::Mat paperSheet(cPaperSheedHeight, cPaperSheedWidth, CV_8UC3);
+    if(foundPaperSheet) {
+        cv::Mat paperSheet(cPaperSheedHeight, cPaperSheedWidth, CV_8UC3);
 
-    cv::Mat transformMatrix = getPaperSheetTransformationMatrix(mImage);
-    cv::warpPerspective(mImage, paperSheet, transformMatrix, paperSheet.size());
+        cv::Mat transformMatrix = getPaperSheetTransformationMatrix(mImage);
+        cv::warpPerspective(mImage, paperSheet, transformMatrix, paperSheet.size());
 
-    return paperSheet;
+        return paperSheet;
+    }
 }
 
 cv::Point2f PapersheetExtractor::findClosestTo(const cv::Point2f &point, const std::vector<cv::Point2f> &points) const {
@@ -36,7 +38,7 @@ cv::Point2f PapersheetExtractor::findClosestTo(const cv::Point2f &point, const s
 
 void PapersheetExtractor::findPaperSheetCoordinates(const cv::Mat &image) {
     cv::Mat cannyOut;
-    cv::Canny(image, cannyOut, 150, 200);
+    cv::Canny(image, cannyOut, 50, 150);
     std::vector<std::vector<cv::Point> > contours;
     cv::findContours(cannyOut, contours, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);
 

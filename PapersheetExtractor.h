@@ -33,8 +33,7 @@ private:
 
     static bool comparePointsClockwise(cv::Point2f a, cv::Point2f b, cv::Point2f center);
 
-    std::vector<cv::Point2f>
-    sortCornerCoordinates(std::vector<cv::Point2f> points) const;
+    std::vector<cv::Point2f> sortCornerCoordinates(std::vector<cv::Point2f> points) const;
 };
 
 

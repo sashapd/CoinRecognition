@@ -10,7 +10,7 @@
 
 
 int main() {
-    cv::Mat image = cv::imread("2017-08-21 15.00.53.jpg", 1);
+    cv::Mat image = cv::imread("coins6.jpg", 1);
     PapersheetExtractor extractor(image);
     cv::Mat i = extractor.getPaperSheetRegion();
     //CoinCounter counter(image);
