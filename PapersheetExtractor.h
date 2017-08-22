@@ -31,8 +31,10 @@ private:
 
     std::vector<cv::Point2f> getCornerCoordinates(const int width, const int height) const;
 
+    static bool comparePointsClockwise(cv::Point2f a, cv::Point2f b, cv::Point2f center);
+
     std::vector<cv::Point2f>
-    sortCornerCoordinates(const std::vector<cv::Point2f> &points, const std::vector<cv::Point2f> &imageCorners) const;
+    sortCornerCoordinates(std::vector<cv::Point2f> points) const;
 };
 
 
