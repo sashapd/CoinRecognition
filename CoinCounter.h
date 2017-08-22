@@ -20,13 +20,7 @@ public:
     void drawPaperRegion(cv::Mat &image) const;
 
 private:
-    cv::Mat mPaperSheetRegion;
-    std::vector<cv::Point2f> mPaperSheetCoordinates;
     std::vector<Coin> mCoins;
-    bool foundPaperSheet = false;
-
-    const int cPaperSheedHeight = 1000;
-    const int cPaperSheedWidth = cPaperSheedHeight * 1.4142;
 
     std::vector<Coin> getCoins() const;
 
@@ -37,19 +31,6 @@ private:
     void drawFrame();
 
     void drawNotFound(cv::Mat &image) const;
-
-    cv::Point2f findClosestTo(const cv::Point2f &point, const std::vector<cv::Point2f> &points) const;
-
-    void findPaperSheetCoordinates(const cv::Mat &image);
-
-    cv::Mat getPaperSheetTransformationMatrix(const cv::Mat &image) const;
-
-    cv::Mat getPaperSheetRegion(const cv::Mat &image) const;
-
-    std::vector<cv::Point2f> getCornerCoordinates(const int width, const int height) const;
-
-    std::vector<cv::Point2f>
-    sortCornerCoordinates(const std::vector<cv::Point2f> &points, const std::vector<cv::Point2f> &imageCorners) const;
 };
 
 
