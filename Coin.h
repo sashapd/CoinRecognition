@@ -10,10 +10,12 @@
 
 class Coin {
 public:
-    Coin(const cv::Vec3f& circle, const cv::Mat& image);
+    Coin(const cv::Vec3f &circle, const cv::Mat &image);
 
     int getValue() const;
-    void drawInfo(cv::Mat& image) const;
+
+    void drawInfo(cv::Mat &image) const;
+
 private:
     cv::Point mPosition;
     double mRadius;
@@ -25,11 +27,15 @@ private:
         UNKNOWN
     };
 
-    Color getCoinColor(const cv::Mat& image) const;
+    Color getCoinColor(const cv::Mat &image) const;
+
     double pixelsToMeters(const double pixels, const cv::Mat &a4Paper) const;
+
     int coinValueByRadius(const double diameter, Color color) const;
-    void drawOutline(cv::Mat& image) const;
-    void drawValue(cv::Mat& image) const;
+
+    void drawOutline(cv::Mat &image) const;
+
+    void drawValue(cv::Mat &image) const;
 };
 
 

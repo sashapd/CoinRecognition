@@ -1,3 +1,4 @@
+#include "curl/curl.h"
 #include <iostream>
 #include <vector>
 #include <opencv2/core/core.hpp>
@@ -5,12 +6,11 @@
 #include "opencv2/imgproc.hpp"
 #include "CoinCounter.h"
 
-int main() {
-    cv::Mat image = cv::imread("coins3.jpg", 1);
 
+int main() {
+    cv::Mat image = cv::imread("2017-08-21 15.00.53.jpg", 1);
     CoinCounter counter(image);
     counter.drawPaperRegion(image);
-
     cv::imshow("image", image);
     cv::waitKey(0);
 
