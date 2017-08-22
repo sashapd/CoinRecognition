@@ -56,7 +56,7 @@ void PapersheetExtractor::findPaperSheetCoordinates(const cv::Mat &image) {
         cv::approxPolyDP(contour, approxContour, perimeter * 0.08, true);
         double area = cv::contourArea(approxContour);
 
-        if (area > maxArea && area > minAllowedArea) {
+        if (area > maxArea && area > minAllowedArea && approxContour.size() == 4) {
             maxCountour = approxContour;
             maxArea = area;
             foundPaperSheet = true;
