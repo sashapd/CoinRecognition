@@ -23,8 +23,6 @@ private:
     const int cPaperSheedHeight = 1000;
     const int cPaperSheedWidth = cPaperSheedHeight * 1.4142;
 
-    cv::Point2f findClosestTo(const cv::Point2f &point, const std::vector<cv::Point2f> &points) const;
-
     void findPaperSheetCoordinates(const cv::Mat &image);
 
     cv::Mat getPaperSheetTransformationMatrix(const cv::Mat &image) const;

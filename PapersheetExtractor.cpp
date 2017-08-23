@@ -23,19 +23,6 @@ cv::Mat PapersheetExtractor::getPaperSheetRegion() {
     }
 }
 
-cv::Point2f PapersheetExtractor::findClosestTo(const cv::Point2f &point, const std::vector<cv::Point2f> &points) const {
-    double minDist = DBL_MAX;
-    cv::Point2f closestPoint;
-    for (const auto &p : points) {
-        double distance = pow(pow(point.x - p.x, 2) + pow(point.y - p.y, 2), 0.5);
-        if (distance < minDist) {
-            closestPoint = p;
-            minDist = distance;
-        }
-    }
-    return closestPoint;
-}
-
 void PapersheetExtractor::findPaperSheetCoordinates(const cv::Mat &image) {
     cv::Mat cannyOut;
     cv::Canny(image, cannyOut, 50, 150);
