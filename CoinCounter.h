@@ -17,20 +17,13 @@ public:
 
     int getTotalValue() const;
 
-    void drawPaperRegion(cv::Mat &image) const;
+    std::vector<Coin> getCoins() const;
 
 private:
     std::vector<Coin> mCoins;
+    cv::Mat mPapersheetImage;
 
-    std::vector<Coin> getCoins() const;
-
-    void drawCoinsInfo();
-
-    void drawTotalValue();
-
-    void drawFrame();
-
-    void drawNotFound(cv::Mat &image) const;
+    void findCoins();
 };
 
 

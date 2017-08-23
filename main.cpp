@@ -12,10 +12,10 @@
 int main() {
     cv::Mat image = cv::imread("coins6.jpg", 1);
     PapersheetExtractor extractor(image);
-    cv::Mat i = extractor.getPaperSheetRegion();
-    //CoinCounter counter(image);
-    //counter.drawPaperRegion(image);
-    cv::imshow("image", i);
+    cv::Mat paperSheet = extractor.getPaperSheetRegion();
+    CoinCounter counter(paperSheet);
+    std::vector<Coin> coins = counter.getCoins();
+    cv::imshow("paperSheet", paperSheet);
     cv::waitKey(0);
 
     return 0;
