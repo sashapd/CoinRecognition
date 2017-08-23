@@ -6,7 +6,7 @@
 #include "opencv2/imgproc.hpp"
 #include "CoinCounter.h"
 #include "PapersheetExtractor.h"
-
+#include "PapersheetDrawer.h"
 
 
 int main() {
@@ -15,6 +15,12 @@ int main() {
     cv::Mat paperSheet = extractor.getPaperSheetRegion();
     CoinCounter counter(paperSheet);
     std::vector<Coin> coins = counter.getCoins();
+
+    PapersheetDrawer drawer(paperSheet);
+    drawer.drawFrame();
+    drawer.drawCoinsInfo(coins);
+    drawer.drawTotalValue(coins);
+
     cv::imshow("paperSheet", paperSheet);
     cv::waitKey(0);
 
