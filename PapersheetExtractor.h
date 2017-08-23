@@ -15,6 +15,8 @@ public:
 
     cv::Mat getPaperSheetRegion();
 
+    cv::Mat putBackPapersheet(cv::Mat &paperSheet) const;
+
 private:
     cv::Mat mImage;
     std::vector<cv::Point2f> mPaperSheetCoordinates;

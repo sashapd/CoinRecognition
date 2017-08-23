@@ -21,7 +21,9 @@ int main() {
     drawer.drawCoinsInfo(coins);
     drawer.drawTotalValue(coins);
 
-    cv::imshow("paperSheet", paperSheet);
+    image = extractor.putBackPapersheet(paperSheet);
+
+    cv::imshow("paperSheet", image);
     cv::waitKey(0);
 
     return 0;

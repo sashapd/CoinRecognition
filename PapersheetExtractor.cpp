@@ -23,6 +23,20 @@ cv::Mat PapersheetExtractor::getPaperSheetRegion() {
     }
 }
 
+cv::Mat PapersheetExtractor::putBackPapersheet(cv::Mat& paperSheet) const {
+    std::vector<cv::Point2f> srcPoint = getCornerCoordinates(cPaperSheedWidth, cPaperSheedHeight);
+
+    cv::Mat transformMatrix = cv::getPerspectiveTransform(srcPoint.data(), mPaperSheetCoordinates.data());
+    cv::Mat transformedRegion(mImage.rows, mImage.cols, CV_8UC3);
+    cv::warpPerspective(paperSheet, transformedRegion, transformMatrix, mImage.size());
+
+    cv::Mat mask = transformedRegion > 0;
+
+    transformedRegion.copyTo(mImage, mask);
+
+    return mImage;
+}
+
 void PapersheetExtractor::findPaperSheetCoordinates(const cv::Mat &image) {
     cv::Mat cannyOut;
     cv::Canny(image, cannyOut, 50, 150);
@@ -117,7 +131,10 @@ std::vector<cv::Point2f> PapersheetExtractor::sortCornerCoordinates(std::vector<
     std::sort(points.begin(), points.end(),
               std::bind(comparePointsClockwise, std::placeholders::_1, std::placeholders::_2, center));
 
-    std::reverse(points.begin(), points.end());
+    points.push_back(points[0]);
+    points.erase(points.begin());
+    points.push_back(points[0]);
+    points.erase(points.begin());
 
     //change coordinates order if the paper sheet is rotated 90 degrees
     if (cv::norm(points[2] - points[1]) < cv::norm(points[1] - points[0])) {
