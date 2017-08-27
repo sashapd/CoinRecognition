@@ -25,21 +25,21 @@ Color CoinColorClassifier::classifyColor(cv::Scalar color) {
               std::bind(cmpScalar, std::placeholders::_1, std::placeholders::_2, color));
 
     int k = 3;
-    auto s = silverTrainData.begin();
-    auto y = yellowTrainData.begin();
+    auto silverIterator = silverTrainData.begin();
+    auto yellowIterator = yellowTrainData.begin();
 
     int yellowN = 0;
     int silverN = 0;
 
     for (int i = 0; i < k; ++i) {
-        double sDist = cv::norm(*s - color);
-        double yDist = cv::norm(*y - color);
+        double sDist = cv::norm(*silverIterator - color);
+        double yDist = cv::norm(*yellowIterator - color);
         if (sDist < yDist) {
             silverN++;
-            s++;
+            silverIterator++;
         } else {
             yellowN++;
-            y++;
+            yellowIterator++;
         }
     }
 
