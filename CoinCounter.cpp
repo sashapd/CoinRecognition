@@ -31,7 +31,7 @@ void CoinCounter::findCoins() {
 
     std::vector<cv::Vec3f> circles;
 
-    cv::HoughCircles(blured, circles, cv::HOUGH_GRADIENT, 1, grayImage.rows / 16, 100, 45);
+    cv::HoughCircles(blured, circles, cv::HOUGH_GRADIENT, 1, grayImage.rows / 16, 75, 45);
 
     for (auto &&circle : circles) {
         mCoins.emplace_back(circle, mPapersheetImage);

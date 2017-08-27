@@ -39,9 +39,11 @@ cv::Mat PapersheetExtractor::putBackPapersheet(cv::Mat& paperSheet) const {
 
 void PapersheetExtractor::findPaperSheetCoordinates(const cv::Mat &image) {
     cv::Mat cannyOut;
-    cv::Canny(image, cannyOut, 50, 150);
+    cv::Canny(image, cannyOut, 150, 200);
     std::vector<std::vector<cv::Point> > contours;
     cv::findContours(cannyOut, contours, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);
+
+    //cv::imshow("c", cannyOut);
 
     std::vector<cv::Point> maxCountour;
     double maxArea = 0;

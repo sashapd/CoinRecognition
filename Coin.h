@@ -6,6 +6,8 @@
 #define COINRECOGNITION_COIN_H
 
 #include <opencv2/core/core.hpp>
+#include "CoinColorClassifier.h"
+#include "Color.h"
 
 
 class Coin {
@@ -20,14 +22,11 @@ private:
     cv::Point mPosition;
     double mRadius;
     int mValue;
+    static CoinColorClassifier classifier;
 
-    enum Color {
-        YELLOW,
-        SILVER,
-        UNKNOWN
-    };
+    cv::Scalar getMeanLabColor(const cv::Mat& image) const;
 
-    Color getCoinColor(const cv::Mat &image) const;
+    Color getCoinColor(const cv::Mat &image);
 
     double pixelsToMeters(const double pixels, const cv::Mat &a4Paper) const;
 

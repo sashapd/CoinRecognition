@@ -6,7 +6,10 @@
 #include <map>
 #include <opencv2/imgproc.hpp>
 #include <opencv/cv.hpp>
+#include <opencv2/ml.hpp>
+#include <fstream>
 
+CoinColorClassifier Coin::classifier;
 
 Coin::Coin(const cv::Vec3f &circle, const cv::Mat &image) {
     mPosition.x = cvRound(circle[0]);
@@ -80,32 +83,23 @@ int Coin::getValue() const {
     return mValue;
 }
 
-Coin::Color Coin::getCoinColor(const cv::Mat &image) const {
-
+cv::Scalar Coin::getMeanLabColor(const cv::Mat &image) const {
     cv::Rect boundingRect(mPosition.x - mRadius, mPosition.y - mRadius, mRadius * 2 + 1, mRadius * 2 + 1);
     cv::Mat circleROI(image, boundingRect);
 
-    cv::Mat hsv;
-    cv::cvtColor(circleROI, hsv, cv::COLOR_BGR2HSV);
-    //circleROI = hsv;
-    cv::Mat rgb;
-    cv::Mat region;
     cv::Mat circularMask = cv::Mat::zeros(circleROI.size(), CV_8UC1);
-    cv::circle(circularMask, circularMask.size() / 2, mRadius, 255, -1, 8, 0 );
+    cv::circle(circularMask, circularMask.size() / 2, mRadius, 255, -1, 8, 0);
 
     cv::Scalar meanColor = cv::mean(circleROI, circularMask);
-    cv::Scalar hM;
-    cv::Mat m(1, 1, CV_8UC3);
-    m.setTo(meanColor);
-    cv::cvtColor(m, m, cv::COLOR_BGR2Lab);
-    hM = m.at<cv::Vec3b>(0, 0);
-    hM[0] = 0;
-    meanColor = hM;
-    //circleROI = meanColor;
 
-    //cv::putText(image, "LAB " + std::to_string(int(meanColor.val[0])) + " " + std::to_string(int(meanColor.val[1])) + " " + std::to_string(int(meanColor.val[2])), mPosition, cv::FONT_HERSHEY_PLAIN, 1.8, cv::Scalar(100, 100, 100), 2);
+    return meanColor;
+}
+
+Color Coin::getCoinColor(const cv::Mat &image) {
+    cv::Scalar meanColor = getMeanLabColor(image);
+    Color c = Coin::classifier.classifyColor(meanColor);
 
 
-    return UNKNOWN;
+    return c;
 }
 

@@ -10,7 +10,9 @@
 
 
 int main() {
-    cv::Mat image = cv::imread("coins6.jpg", 1);
+    cv::Mat image = cv::imread("coins01.jpg", 1);
+    const int imSize = 1500;
+    cv::resize(image, image, cv::Size(imSize, imSize * image.rows/image.cols));
     PapersheetExtractor extractor(image);
     cv::Mat paperSheet = extractor.getPaperSheetRegion();
     CoinCounter counter(paperSheet);
