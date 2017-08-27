@@ -10,10 +10,13 @@
 
 int main() {
     cv::Mat image = cv::imread("coins01.jpg", 1);
+
     const int imSize = 1500;
-    cv::resize(image, image, cv::Size(imSize, imSize * image.rows/image.cols));
+    cv::resize(image, image, cv::Size(imSize, imSize * image.rows / image.cols));
+
     PapersheetExtractor extractor(image);
     cv::Mat paperSheet = extractor.getPaperSheetRegion();
+    
     CoinCounter counter(paperSheet);
     std::vector<Coin> coins = counter.getCoins();
 
